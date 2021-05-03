@@ -1,7 +1,6 @@
-import uuid
 from copy import deepcopy
 
-from flask import jsonify, request, redirect, url_for
+from flask import jsonify, request
 
 from app import app
 from app import db
