@@ -1,2 +1,2 @@
 release: python manage.py migrate
-web: gunicorn app:app --log-file -
+web: gunicorn app:main --log-file -
