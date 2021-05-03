@@ -8,49 +8,6 @@ from app import db
 from models import Shop, Mall
 
 
-SHOPS = [
-    {
-        'id': uuid.uuid4().hex,
-        'Mall': 'Gulliver',
-        'Type': 'Clothes',
-        'Name': 'H&M',
-        'City': 'Kyiv',
-        'District': 'Podil'
-    },
-    {
-        'id': uuid.uuid4().hex,
-        'Mall': 'Dream Town',
-        'Type': 'Technologies',
-        'Name': 'MOYO',
-        'City': 'Kyiv',
-        'District': 'Obolon'
-    },
-    {
-        'id': uuid.uuid4().hex,
-        'Mall': 'Dream Town 2',
-        'Type': 'Toys',
-        'Name': 'Budinok igrashok',
-        'City': 'Kyiv',
-        'District': 'Obolon'
-    }
-]
-
-MALLS = [
-    {
-        'id': uuid.uuid4().hex,
-        'Name': 'Gulliver',
-        'City': 'Kyiv',
-        'District': 'Podil'
-    },
-    {
-        'id': uuid.uuid4().hex,
-        'Name': 'Dream Town',
-        'City': 'Kyiv',
-        'District': 'Obolon'
-    }
-]
-
-
 def convert_shops_to_dict(shops: list) -> list:
     row = []
     for shop in shops:
@@ -62,7 +19,7 @@ def convert_shops_to_dict(shops: list) -> list:
             'Mall': '',
             'District': '',
         }
-        if not(shop.malls):
+        if not shop.malls:
             row.append(dict_shop)
         else:
             for mall in shop.malls:
@@ -77,14 +34,29 @@ def convert_shops_to_dict(shops: list) -> list:
 
 def convert_malls_to_dict(malls):
     row = []
+    appended = False
     for mall in malls:
         temp_mall = {
             'id': mall.id,
-            'City': mall.City,
             'Name': mall.Name,
-            'District': mall.District
+            'City': mall.City,
+            'District': mall.District,
+            'Shop': '',
         }
-        row.append(temp_mall)
+        # row.append(temp_mall)
+        # if not mall.shops:
+        #     row.append(temp_mall)
+        # else:
+
+        temp_shop = deepcopy(temp_mall)
+        for shop in mall.shops:
+            temp_shop = deepcopy(temp_mall)
+            temp_shop['Shop'] = shop.Name
+            row.append(temp_shop)
+            appended = True
+
+        if not appended:
+            row.append(temp_shop)
 
     return row
 
@@ -212,20 +184,11 @@ def single_shop(shop_id, mall_id):
     return jsonify(response_object)
 
 
-
-
-
 @app.route('/malls', methods=['GET', 'POST'])
 def all_malls():
     response_object = {'status': 'success'}
     if request.method == 'POST':
         post_data = request.get_json()
-        # MALLS.append({
-        #     'id': uuid.uuid4().hex,
-        #     'Name': post_data.get('Name'),
-        #     'City': post_data.get('City'),
-        #     'District': post_data.get('District')
-        # })
         mall = Mall.query.filter_by(Name=post_data.get('Name')).first()
         if mall is None:
             mall = Mall(
@@ -246,14 +209,6 @@ def all_malls():
             })
 
 
-# def remove_malls(mall_id):
-#     for mall in MALLS:
-#         if mall['id'] == mall_id:
-#             MALLS.remove(mall)
-#             return True
-#     return False
-
-
 @app.route('/malls/<mall_id>', methods=['PUT', 'DELETE'])
 def single_mall(mall_id):
     response_object = {
@@ -262,44 +217,16 @@ def single_mall(mall_id):
     }
     if request.method == 'PUT':
         post_data = request.get_json()
-        # remove_shop(mall_id)
-        # MALLS.append({
-        #     'id': uuid.uuid4().hex,
-        #     'Name': post_data.get('Name'),
-        #     'City': post_data.get('City'),
-        #     'District': post_data.get('District')
-        # })
         mall = Mall.query.filter_by(id=mall_id).first()
         mall.City = post_data.get('City')
         mall.District = post_data.get('District')
         mall.Name = post_data.get('Name')
-        # mall = Mall.query.filter_by(Name=post_data.get('Name')).first()
-        # if mall is None:
-        #     remove_malls(mall_id)
-        #     mall = Mall(
-        #         Name=post_data.get('Name'),
-        #         City=post_data.get('City'),
-        #         District=post_data.get('District'),
-        #         id=mall_id,
-        #     )
-        #     db.session.add(mall)
-        # elif mall.id == int(mall_id):
-        #     mall.City = post_data.get('City')
-        #     mall.District = post_data.get('District')
-        #     db.session.add(mall)
-        # else:
-        #     response_object['status'] = 'Fail'
-        #     response_object['message'] = 'Mall with this name already exists'
-
         db.session.add(mall)
         db.session.commit()
-        # response_object['message'] = 'Mall updated!'
     if request.method == 'DELETE':
         remove_malls(mall_id)
         response_object['message'] = 'Mall removed!'
     return jsonify(response_object)
-
-# sanity check route
 
 
 @app.route('/ping', methods=['GET'])

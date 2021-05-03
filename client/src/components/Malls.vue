@@ -22,12 +22,19 @@
           </tr>
           </thead>
           <tbody>
-          <tr v-for="(mall, index) in malls" :key="index">
+          <tr v-for="(mall, index) in uniqueMalls" :key="index">
             <td>{{ mall.Name }}</td>
             <td>{{ mall.City }}</td>
             <td>{{ mall.District }}</td>
             <td>
               <div class="btn-group" role="group">
+                <button
+                  type="button"
+                  class="btn btn-info btn-sm"
+                  v-b-modal.all-shops-modal
+                  @click="showShops(mall)">
+                  Show Shops
+                </button>
                 <button
                   type="button"
                   class="btn btn-warning btn-sm"
@@ -126,6 +133,30 @@
         <b-button type="reset" variant="danger">Cancel</b-button>
       </b-form>
     </b-modal>
+    <b-modal ref="allShopsModal"
+             id="all-shops-modal"
+             title="Shops"
+             hide-footer>
+      <table class="table table-hover">
+        <thead>
+        <tr>
+          <th scope="col">Name</th>
+<!--          <th scope="col">City</th>-->
+<!--          <th scope="col">District</th>-->
+<!--          <th scope="col">Shop</th>-->
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="(mall, index) in malls" :key="index">
+<!--          <td>{{ mall.Name }}</td>-->
+<!--          <td>{{ mall.City }}</td>-->
+<!--          <td>{{ mall.District }}</td>-->
+          <td v-if="mall.id === shopsForm.id">{{ mall.Shop }}</td>
+        </tr>
+        </tbody>
+      </table>
+    </b-modal>
   </div>
 </template>
 
@@ -138,6 +169,7 @@ export default {
   data () {
     return {
       malls: [],
+      uniqueMalls: [],
       addMallForm: {
         id: '',
         Name: '',
@@ -151,6 +183,13 @@ export default {
         Name: '',
         City: '',
         District: ''
+      },
+      shopsForm: {
+        id: '',
+        Name: '',
+        City: '',
+        District: '',
+        Shop: ''
       }
     }
   },
@@ -163,7 +202,25 @@ export default {
       axios.get(path)
         .then((res) => {
           this.malls = res.data.malls
-          console.log(res.data)
+          let mallsNames = []
+          this.uniqueMalls = []
+          this.malls.forEach(
+            mall => {
+              if (!mallsNames.includes(mall.Name)) {
+                // console.log(!mallsNames.includes(mall.Name))
+                // console.log(mallsNames.includes(mall.Name))
+                mallsNames.push(mall.Name)
+                this.uniqueMalls.push({
+                  id: mall.id,
+                  City: mall.City,
+                  District: mall.District,
+                  Name: mall.Name
+                })
+              }
+            }
+          )
+          console.log(this.uniqueMalls)
+          // console.log(mallsNames)
         })
         .catch((error) => {
           // eslint-отключение следующей строки
@@ -187,6 +244,10 @@ export default {
     editMall (mall) {
       // console.log('edit form = ' + mall.Name + mall.Mall)
       this.editForm = mall
+    },
+    showShops (mall) {
+      // console.log('edit form = ' + mall.Name + mall.Mall)
+      this.shopsForm = mall
     },
     updateMall (payload, mallID) {
       const path = `http://localhost:5000/malls/${mallID}`
